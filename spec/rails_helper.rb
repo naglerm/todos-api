@@ -6,7 +6,8 @@ require File.expand_path('../../config/environment', __FILE__)
 abort("The Rails environment is running in production mode!") if Rails.env.production?
 require 'rspec/rails'
 # Add additional requires below this line. Rails is not loaded until this point!
-
+require 'support/request_spec_helper'#make sure to include in RSpec.configure
+require 'support/controller_spec_helper'
 # Requires supporting ruby files with custom matchers and macros, etc, in
 # spec/support/ and its subdirectories. Files matching `spec/**/*_spec.rb` are
 # run as spec files by default. This means that files in spec/support that end
@@ -20,11 +21,14 @@ require 'rspec/rails'
 # directory. Alternatively, in the individual `*_spec.rb` files, manually
 # require only the support files necessary.
 #
-# Dir[Rails.root.join('spec/support/**/*.rb')].each { |f| require f }
+#Dir[Rails.root.join('spec/support/**/*.rb')].each { |f| require f } !!!Not working
 
 # Checks for pending migration and applies them before tests are run.
 # If you are not using ActiveRecord, you can remove this line.
 ActiveRecord::Migration.maintain_test_schema!
+
+#include our module for JSON support
+#Dir[Rails.root.join('spec/support/**/*.rb')].each { |f| require f }
 
 RSpec.configure do |config|
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
@@ -56,12 +60,15 @@ RSpec.configure do |config|
   # config.filter_gems_from_backtrace("gem name")
 
   #add Factory girl methods
-  config.include FactoryGirl::Syntax::methods
+  config.include FactoryGirl::Syntax::Methods
+
+  config.include RequestSpecHelper
+  config.include ControllerSpecHelper
 
   #start by truncating all tables but use faster transaction strategy rest of the time
   config.before(:suite) do
-    DatabaseCleaner.clean_with(:truncations)
-    DatabaseCleaner.stragegy = :trunsaction
+    DatabaseCleaner.clean_with(:truncation)
+    DatabaseCleaner.strategy = :transaction
   end
 
   #start transaction strategy as examples are run
@@ -72,7 +79,7 @@ RSpec.configure do |config|
   end
 end
 
-Shoulda::Matchers.configure do |congfig|
+Shoulda::Matchers.configure do |config|
   config.integrate do |with|
     with.test_framework :rspec
     with.library :rails
